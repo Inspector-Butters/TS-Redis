@@ -5,4 +5,4 @@
 # CodeCrafters uses this file to test your code. Don't make any changes here!
 #
 # DON'T EDIT THIS!
-exec bun run app/main.ts "$@"
+exec deno run --allow-net --allow-read app/main.ts "$@"
