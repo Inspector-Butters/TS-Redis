@@ -63,6 +63,9 @@ async function main() {
       case "PING": {
         return simpleString("PONG");
       }
+      case "REPLCONF": {
+        return simpleString("OK");
+      }
       case "ECHO": {
         return parseOutputList(args);
       }
