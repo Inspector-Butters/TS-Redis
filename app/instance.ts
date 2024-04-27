@@ -89,6 +89,10 @@ master_repl_offset:${this.replicationOffset}
         step++;
         sock.write(parseOutputString("REPLCONF capa psync2"));
       }
+      if (step === 3 && data.toString() == "+OK\r\n") {
+        step++;
+        sock.write(parseOutputString("PSYNC ? -1"));
+      }
     });
   }
 }
