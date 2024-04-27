@@ -66,6 +66,13 @@ async function main() {
       case "REPLCONF": {
         return simpleString("OK");
       }
+      case "PSYNC": {
+        if (args[0] === "?" && args[1] === "-1") {
+          return simpleString(
+            `FULLRESYNC ${instance.replicationId} ${instance.replicationOffset}`
+          );
+        }
+      }
       case "ECHO": {
         return parseOutputList(args);
       }
