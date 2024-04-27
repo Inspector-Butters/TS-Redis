@@ -9,6 +9,9 @@ import {
 } from "./resp.ts";
 import { CustomCache } from "./cache.ts";
 
+const emptyRDB: string =
+  "524544495330303131fa0972656469732d76657205372e322e30fa0a72656469732d62697473c040fa056374696d65c26d08bc65fa08757365642d6d656dc2b0c41000fa08616f662d62617365c000fff06e3bfec0ff5aa2";
+
 async function main() {
   const options: ParseArgsConfig["options"] = {
     port: {
@@ -48,33 +51,39 @@ async function main() {
     connection.on("data", (data: Buffer) => {
       const command: string = data.toString().trim();
       const result = parseCommand(command);
-      return connection.write(result);
+      for (const res of result) {
+        connection.write(res);
+      }
+      return;
     });
   });
 
   server.listen(port, "127.0.0.1");
   console.log(`Server listening on port ${port}`);
 
-  function parseCommand(str: string): string {
+  function parseCommand(str: string): string[] {
     const [cmd, ...args] = parseRespCommand(str);
     console.log("parsed command", cmd, args);
 
     switch (cmd.toUpperCase()) {
       case "PING": {
-        return simpleString("PONG");
+        return [simpleString("PONG")];
       }
       case "REPLCONF": {
-        return simpleString("OK");
+        return [simpleString("OK")];
       }
       case "PSYNC": {
         if (args[0] === "?" && args[1] === "-1") {
-          return simpleString(
-            `FULLRESYNC ${instance.replicationId} ${instance.replicationOffset}`
-          );
+          return [
+            simpleString(
+              `FULLRESYNC ${instance.replicationId} ${instance.replicationOffset}`
+            ),
+            `$${emptyRDB.length}\r\n${emptyRDB}`,
+          ];
         }
       }
       case "ECHO": {
-        return parseOutputList(args);
+        return [parseOutputList(args)];
       }
       case "SET": {
         const [key, val, px, exp] = args;
@@ -85,20 +94,20 @@ async function main() {
         } else {
           cache.set(key, val, false, 0);
         }
-        return simpleString("OK");
+        return [simpleString("OK")];
       }
       case "GET": {
         const [key] = args;
         const value = cache.get(key);
-        return bulkString(value);
+        return [bulkString(value)];
       }
       case "INFO": {
         if (args[0].toUpperCase() == "REPLICATION") {
-          return bulkString(instance.replicationInfo);
+          return [bulkString(instance.replicationInfo)];
         }
       }
       default:
-        return simpleString("OK");
+        return [simpleString("OK")];
     }
   }
 }
