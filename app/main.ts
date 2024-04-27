@@ -5,12 +5,13 @@ import {
   bulkString,
   parseOutputList,
   parseRespCommand,
+  RDBString,
   simpleString,
 } from "./resp.ts";
 import { CustomCache } from "./cache.ts";
 
 const emptyRDB: string =
-  "UkVESVMwMDEx+glyZWRpcy12ZXIFNy4yLjD6CnJlZGlzLWJpdHPAQPoFY3RpbWXCbQi8ZfoIdXNlZC1tZW3CsMQQAPoIYW9mLWJhc2XAAP/wbjv+wP9aog==";
+  "524544495330303131fa0972656469732d76657205372e322e30fa0a72656469732d62697473c040fa056374696d65c26d08bc65fa08757365642d6d656dc2b0c41000fa08616f662d62617365c000fff06e3bfec0ff5aa2";
 
 async function main() {
   const options: ParseArgsConfig["options"] = {
@@ -61,7 +62,7 @@ async function main() {
   server.listen(port, "127.0.0.1");
   console.log(`Server listening on port ${port}`);
 
-  function parseCommand(str: string): string[] {
+  function parseCommand(str: string): any[] {
     const [cmd, ...args] = parseRespCommand(str);
     console.log("parsed command", cmd, args);
 
@@ -78,7 +79,7 @@ async function main() {
             simpleString(
               `FULLRESYNC ${instance.replicationId} ${instance.replicationOffset}`
             ),
-            `$${emptyRDB.length}\r\n${emptyRDB}`,
+            RDBString(emptyRDB),
           ];
         }
       }

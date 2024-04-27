@@ -37,3 +37,8 @@ export function parseOutputString(str: string) {
   const parts = str.split(" ");
   return parseOutputList(parts);
 }
+
+export function RDBString(emptyRdbContentHex) {
+  const contentBuf = Buffer.from(emptyRdbContentHex, "hex");
+  return Buffer.concat([Buffer.from(`$${contentBuf.length}\r\n`), contentBuf]);
+}
