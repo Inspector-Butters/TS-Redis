@@ -39,7 +39,7 @@ async function main() {
     }
     const masterPort = positionals[0];
     instance = Instance.initSlave(masterHost, masterPort);
-    // instance.initiateHandshake(port);
+    instance.initiateHandshake(port);
   } else {
     instance = Instance.initMaster();
   }
