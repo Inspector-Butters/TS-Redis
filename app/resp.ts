@@ -1,4 +1,4 @@
-export function parseRespCommand(cmd: string) {
+export function parseRespCommand(cmd: string): string[] {
   const lines = cmd.split("\r\n");
   const parts: string[] = [];
   const len = parseInt(lines[0].split("*")[1]);

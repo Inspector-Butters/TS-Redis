@@ -77,16 +77,15 @@ master_repl_offset:${this.replicationOffset}
     );
 
     sock.on("data", (data: Buffer) => {
-      const resp = parseRespCommand(data.toString().trim());
       console.log("Received data from master", data.toString());
 
-      if (step === 1 && resp[0].toUpperCase() == "PONG") {
+      if (step === 1 && data.toString() == "+PONG\r\n") {
         step++;
         sock.write(
           parseOutputString(`REPLCONF listening-port ${port.toString()}`)
         );
       }
-      if (step === 2 && resp[0].toUpperCase() == "OK") {
+      if (step === 2 && data.toString() == "+OK\r\n") {
         step++;
         sock.write(parseOutputString("REPLCONF capa psync2"));
       }
