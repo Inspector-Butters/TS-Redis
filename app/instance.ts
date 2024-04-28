@@ -80,26 +80,41 @@ master_repl_offset:${this.replicationOffset}
     sock.on("data", (data: Buffer) => {
       // console.log("Received data from master", data.toString());
 
+      if (step > 5) {
+        const command: string = data.toString().trim();
+        console.log("SLAVE RECIEVED COMMAND FROM MASTER", JSON.stringify(command));
+        parseCommand(command, this);
+        return;
+      }
+
       if (step === 1 && data.toString() == "+PONG\r\n") {
         step++;
         sock.write(
           parseOutputString(`REPLCONF listening-port ${port.toString()}`)
         );
-      } else if (step === 2 && data.toString() == "+OK\r\n") {
+        return;
+      }
+      if (step === 2 && data.toString() == "+OK\r\n") {
         step++;
         sock.write(parseOutputString("REPLCONF capa psync2"));
-      } else if (step === 3 && data.toString() == "+OK\r\n") {
+        return;
+      }
+      if (step === 3 && data.toString() == "+OK\r\n") {
         step++;
         sock.write(parseOutputString("PSYNC ? -1"));
-      } else if (step === 4 && data.toString().startsWith("+FULLRESYNC")) {
+        return;
+      }
+      if (step === 4 && data.toString().startsWith("+FULLRESYNC")) {
         step++;
-      } else if (step === 5) {
+        return;
+      }
+      if (step === 5) {
         step++;
         console.log("RDB received");
-      } else {
-        const command: string = data.toString().trim();
-        parseCommand(command, this);
+        return;
       }
+
+
     });
   }
 }
