@@ -92,6 +92,7 @@ master_repl_offset:${this.replicationOffset}
       }
 
       if (step === 1 && data.toString() == "+PONG\r\n") {
+        console.log("PONG received");
         step++;
         sock.write(
           parseOutputString(`REPLCONF listening-port ${port.toString()}`)
@@ -99,16 +100,19 @@ master_repl_offset:${this.replicationOffset}
         return;
       }
       if (step === 2 && data.toString() == "+OK\r\n") {
+        console.log("REPLCONF received");
         step++;
         sock.write(parseOutputString("REPLCONF capa psync2"));
         return;
       }
       if (step === 3 && data.toString() == "+OK\r\n") {
+        console.log("REPLCONF received");
         step++;
         sock.write(parseOutputString("PSYNC ? -1"));
         return;
       }
       if (step === 4 && data.toString().startsWith("+FULLRESYNC")) {
+        console.log("FULLRESYNC received");
         step++;
         return;
       }
