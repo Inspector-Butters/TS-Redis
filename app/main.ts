@@ -43,7 +43,6 @@ async function main() {
   const server: net.Server = net.createServer((connection: net.Socket) => {
     connection.on("data", (data: Buffer) => {
       const command: string = data.toString().trim();
-      console.log(instance.role, "received command", instance.isMaster);
       if (instance.isMaster) {
         addReplicaConnection(command, connection);
       }

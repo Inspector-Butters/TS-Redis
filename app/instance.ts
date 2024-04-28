@@ -94,6 +94,7 @@ master_repl_offset:${this.replicationOffset}
       } else if (step === 4 && data.toString().startsWith("+FULLRESYNC")) {
         step++;
       } else if (step === 5) {
+        step++;
         console.log("RDB received");
       } else {
         const command: string = data.toString().trim();
