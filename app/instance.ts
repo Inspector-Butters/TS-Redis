@@ -85,7 +85,7 @@ master_repl_offset:${this.replicationOffset}
         const commands: string[] = data.toString().trim().split("*");
         // console.log("SLAVE RECIEVED COMMAND FROM MASTER", JSON.stringify(command));
         for (let i = 1; i < commands.length; i++) {
-          parseCommand("*" + commands[i], this);
+          parseCommand("*".concat(commands[i]), this);
         }
         return;
       }

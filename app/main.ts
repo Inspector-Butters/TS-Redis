@@ -46,13 +46,13 @@ async function main() {
       const commands: string[] = data.toString().trim().split("*");
       for (let i = 1; i < commands.length; i++) {
         if (instance.isMaster) {
-          addReplicaConnection("*" + commands[i], connection);
+          addReplicaConnection("*".concat(commands[i]), connection);
         }
-        const [type, ...result] = parseCommand("*" + commands[i], instance);
+        const [type, ...result] = parseCommand("*".concat(commands[i]), instance);
         if (type === 1 && instance.isMaster) {
           for (const replica of instance.replicaConnections) {
-            // console.log("Writing to replica", data.toString());
-            replica.write("*" + commands[i]);
+            console.log("Writing to replica", JSON.stringify("*".concat(commands[i])));
+            replica.write("*".concat(commands[i]));
           }
         }
         for (const res of result) {
