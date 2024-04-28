@@ -1,9 +1,6 @@
 import net from "node:net";
 import { randomUUID } from "node:crypto";
-import {
-  parseOutputString,
-  respArray,
-} from "./resp.ts";
+import { parseOutputString, respArray } from "./resp.ts";
 import { CustomCache } from "./cache.ts";
 import { parseCommand } from "./utils.ts";
 
@@ -80,12 +77,15 @@ master_repl_offset:${this.replicationOffset}
     sock.on("data", (data: Buffer) => {
       // console.log("Received data from master", data.toString());
 
-      if (step > 5) {
+      if (step > 6) {
         // const command: string = data.toString().trim();
         // console.log("SLAVE KIRI RECIEVED COMMAND FROM MASTER", JSON.stringify(data.toString()));
         const commands: string[] = data.toString().trim().split("*");
         for (let i = 1; i < commands.length; i++) {
-          console.log("SLAVE RECIEVED COMMAND FROM MASTER", JSON.stringify("*".concat(commands[i])));
+          console.log(
+            "SLAVE RECIEVED COMMAND FROM MASTER",
+            JSON.stringify("*".concat(commands[i]))
+          );
           parseCommand("*".concat(commands[i]), this);
         }
         return;
@@ -117,8 +117,14 @@ master_repl_offset:${this.replicationOffset}
         console.log("RDB received");
         return;
       }
-
-
+      if (
+        step === 6 &&
+        data.toString().toLocaleLowerCase().startsWith("*3\r\n$8\r\nreplconf")
+      ) {
+        step++;
+        sock.write(parseOutputString("REPLCONF ACK 0"));
+        return;
+      }
     });
   }
 }
