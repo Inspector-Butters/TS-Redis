@@ -47,6 +47,7 @@ async function main() {
       const [type, ...result] = parseCommand(command, instance);
       if (type === 1 && instance.isMaster) {
         for (const replica of instance.replicaConnections) {
+          console.log("Writing to replica", data.toString());
           replica.write(data);
         }
       }
