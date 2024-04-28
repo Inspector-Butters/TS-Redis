@@ -78,7 +78,7 @@ master_repl_offset:${this.replicationOffset}
     );
 
     sock.on("data", (data: Buffer) => {
-      console.log("Received data from master", data.toString());
+      // console.log("Received data from master", data.toString());
 
       if (step === 1 && data.toString() == "+PONG\r\n") {
         step++;
