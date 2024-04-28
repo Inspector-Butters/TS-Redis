@@ -1,12 +1,11 @@
 import net from "node:net";
 import { randomUUID } from "node:crypto";
 import {
-  bulkString,
   parseOutputString,
-  parseRespCommand,
   respArray,
-  simpleString,
 } from "./resp.ts";
+import { CustomCache } from "./cache.ts";
+import { parseCommand } from "./utils.ts";
 
 enum instanceRole {
   MASTER = "master",
@@ -16,6 +15,7 @@ enum instanceRole {
 export class Instance {
   config: Record<string, any> = {};
   replicaConnections: net.Socket[] = [];
+  cache: CustomCache = new CustomCache();
 
   constructor(
     readonly role: instanceRole,
@@ -85,13 +85,15 @@ master_repl_offset:${this.replicationOffset}
         sock.write(
           parseOutputString(`REPLCONF listening-port ${port.toString()}`)
         );
-      }
-      if (step === 2 && data.toString() == "+OK\r\n") {
+      } else if (step === 2 && data.toString() == "+OK\r\n") {
         step++;
         sock.write(parseOutputString("REPLCONF capa psync2"));
       } else if (step === 3 && data.toString() == "+OK\r\n") {
         step++;
         sock.write(parseOutputString("PSYNC ? -1"));
+      } else {
+        const command: string = data.toString().trim();
+        parseCommand(command, this);
       }
     });
   }
