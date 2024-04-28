@@ -82,7 +82,7 @@ master_repl_offset:${this.replicationOffset}
 
       if (step > 5) {
         // const command: string = data.toString().trim();
-        console.log("SLAVE KIRI RECIEVED COMMAND FROM MASTER", JSON.stringify(data.toString()));
+        // console.log("SLAVE KIRI RECIEVED COMMAND FROM MASTER", JSON.stringify(data.toString()));
         const commands: string[] = data.toString().trim().split("*");
         for (let i = 1; i < commands.length; i++) {
           console.log("SLAVE RECIEVED COMMAND FROM MASTER", JSON.stringify("*".concat(commands[i])));

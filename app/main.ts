@@ -43,7 +43,8 @@ async function main() {
   const server: net.Server = net.createServer((connection: net.Socket) => {
     connection.on("data", (data: Buffer) => {
       console.log(instance.role.toString().toUpperCase(), "RECIEVED COMMAND FROM CLIENT", JSON.stringify(data.toString()));
-      const commands: string[] = data.toString().trim().split("*");
+      const commands: string[] = data.toString().split("*");
+      console.log("RECIEVED DATA", JSON.stringify(commands));
       for (let i = 1; i < commands.length; i++) {
         if (instance.isMaster) {
           addReplicaConnection("*".concat(commands[i]), connection);
