@@ -43,19 +43,21 @@ async function main() {
   const server: net.Server = net.createServer((connection: net.Socket) => {
     connection.on("data", (data: Buffer) => {
       console.log(instance.role.toString().toUpperCase(), "RECIEVED COMMAND FROM CLIENT", JSON.stringify(data.toString()));
-      const command: string = data.toString().trim();
-      if (instance.isMaster) {
-        addReplicaConnection(command, connection);
-      }
-      const [type, ...result] = parseCommand(command, instance);
-      if (type === 1 && instance.isMaster) {
-        for (const replica of instance.replicaConnections) {
-          console.log("Writing to replica", data.toString());
-          replica.write(data);
+      const commands: string[] = data.toString().trim().split("*");
+      for (let i = 1; i < commands.length; i++) {
+        if (instance.isMaster) {
+          addReplicaConnection("*" + commands[i], connection);
         }
-      }
-      for (const res of result) {
-        connection.write(res);
+        const [type, ...result] = parseCommand("*" + commands[i], instance);
+        if (type === 1 && instance.isMaster) {
+          for (const replica of instance.replicaConnections) {
+            // console.log("Writing to replica", data.toString());
+            replica.write("*" + commands[i]);
+          }
+        }
+        for (const res of result) {
+          connection.write(res);
+        }
       }
       return;
     });
