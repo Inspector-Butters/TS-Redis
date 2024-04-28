@@ -7,7 +7,7 @@ const emptyRDB: string =
 
 function parseCommand(str: string, instance: Instance): any[] {
     const [cmd, ...args] = parseRespCommand(str);
-    console.log("parsed command", cmd, args);
+    console.log(instance.role, "parsed command", cmd, args);
 
     switch (cmd.toUpperCase()) {
         case "PING": {
