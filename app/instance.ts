@@ -91,9 +91,12 @@ master_repl_offset:${this.replicationOffset}
       } else if (step === 3 && data.toString() == "+OK\r\n") {
         step++;
         sock.write(parseOutputString("PSYNC ? -1"));
+      } else if (step === 4 && data.toString().startsWith("+FULLRESYNC")) {
+        step++;
+      } else if (step === 5) {
+        console.log("RDB received");
       } else {
         const command: string = data.toString().trim();
-        console.log("Received command from master: ", command);
         parseCommand(command, this);
       }
     });
