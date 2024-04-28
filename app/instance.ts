@@ -122,6 +122,7 @@ master_repl_offset:${this.replicationOffset}
         return;
       }
       if (step === 6) {
+        console.log("GETACK received");
         step++;
         sock.write(parseOutputString("REPLCONF ACK 0"));
         return;
