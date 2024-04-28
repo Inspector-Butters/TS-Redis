@@ -117,10 +117,7 @@ master_repl_offset:${this.replicationOffset}
         console.log("RDB received");
         return;
       }
-      if (
-        step === 6 &&
-        data.toString().toLocaleLowerCase().startsWith("*3\r\n$8\r\nreplconf")
-      ) {
+      if (step === 6) {
         step++;
         sock.write(parseOutputString("REPLCONF ACK 0"));
         return;
