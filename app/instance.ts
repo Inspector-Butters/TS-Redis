@@ -93,6 +93,7 @@ master_repl_offset:${this.replicationOffset}
         sock.write(parseOutputString("PSYNC ? -1"));
       } else {
         const command: string = data.toString().trim();
+        console.log("Received command from master: ", command);
         parseCommand(command, this);
       }
     });
