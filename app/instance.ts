@@ -83,8 +83,8 @@ master_repl_offset:${this.replicationOffset}
       if (step > 5) {
         // const command: string = data.toString().trim();
         const commands: string[] = data.toString().trim().split("*");
-        // console.log("SLAVE RECIEVED COMMAND FROM MASTER", JSON.stringify(command));
         for (let i = 1; i < commands.length; i++) {
+          console.log("SLAVE RECIEVED COMMAND FROM MASTER", JSON.stringify("*".concat(commands[i])));
           parseCommand("*".concat(commands[i]), this);
         }
         return;
