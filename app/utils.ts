@@ -7,6 +7,7 @@ const emptyRDB: string =
 
 function parseCommand(str: string, instance: Instance): any[] {
     const [cmd, ...args] = parseRespCommand(str);
+    console.log("HERE HERE", parseRespCommand(str));
     // console.log(instance.role, "parsed command", cmd, args);
 
     switch (cmd.toUpperCase()) {
