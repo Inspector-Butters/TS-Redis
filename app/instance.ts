@@ -15,6 +15,7 @@ enum instanceRole {
 
 export class Instance {
   config: Record<string, any> = {};
+  replicaConnections: net.Socket[] = [];
 
   constructor(
     readonly role: instanceRole,

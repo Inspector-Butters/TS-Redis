@@ -51,7 +51,13 @@ async function main() {
   const server: net.Server = net.createServer((connection: net.Socket) => {
     connection.on("data", (data: Buffer) => {
       const command: string = data.toString().trim();
-      const result = parseCommand(command);
+      addReplicaConnection(command, connection);
+      const [type, ...result] = parseCommand(command);
+      if (type === 1) {
+        for (const replica of instance.replicaConnections) {
+          replica.write(data);
+        }
+      }
       for (const res of result) {
         connection.write(res);
       }
@@ -62,20 +68,29 @@ async function main() {
   server.listen(port, "127.0.0.1");
   console.log(`Server listening on port ${port}`);
 
+  function addReplicaConnection(data: string, connection: net.Socket) {
+    const [cmd, ...args] = parseRespCommand(data);
+    if (cmd.toUpperCase() === "REPLCONF" && args[0] === "listening-port") {
+      instance.replicaConnections.push(connection);
+      console.log("Replica connection added");
+    }
+  }
+
   function parseCommand(str: string): any[] {
     const [cmd, ...args] = parseRespCommand(str);
     console.log("parsed command", cmd, args);
 
     switch (cmd.toUpperCase()) {
       case "PING": {
-        return [simpleString("PONG")];
+        return [-1, simpleString("PONG")];
       }
       case "REPLCONF": {
-        return [simpleString("OK")];
+        return [-1, simpleString("OK")];
       }
       case "PSYNC": {
         if (args[0] === "?" && args[1] === "-1") {
           return [
+            -1,
             simpleString(
               `FULLRESYNC ${instance.replicationId} ${instance.replicationOffset}`
             ),
@@ -84,7 +99,7 @@ async function main() {
         }
       }
       case "ECHO": {
-        return [parseOutputList(args)];
+        return [-1, parseOutputList(args)];
       }
       case "SET": {
         const [key, val, px, exp] = args;
@@ -95,20 +110,20 @@ async function main() {
         } else {
           cache.set(key, val, false, 0);
         }
-        return [simpleString("OK")];
+        return [1, simpleString("OK")];
       }
       case "GET": {
         const [key] = args;
         const value = cache.get(key);
-        return [bulkString(value)];
+        return [-1, bulkString(value)];
       }
       case "INFO": {
         if (args[0].toUpperCase() == "REPLICATION") {
-          return [bulkString(instance.replicationInfo)];
+          return [-1, bulkString(instance.replicationInfo)];
         }
       }
       default:
-        return [simpleString("OK")];
+        return [-1, simpleString("OK")];
     }
   }
 }
