@@ -63,15 +63,15 @@ master_repl_offset:${this.replicationOffset}
     console.log("Initiating handshake");
     let step = 1;
     const States = {
-      START: 0,
-      PING: 1,
-      REPLCONF_PORT: 2,
-      REPLCONF_CAPA: 3,
-      PSYNC: 4,
-      FULLRESYNC: 5,
-      RDB: 6,
-      GETACK: 7,
-      COMMAND: 8
+      START: "start",
+      PING: "ping",
+      REPLCONF_PORT: "replconf_port",
+      REPLCONF_CAPA: "replconf_capa",
+      PSYNC: "psync",
+      FULLRESYNC: "fullresync",
+      RDB: "rdb",
+      GETACK: "getack",
+      COMMAND: "command",
     }
     let HandshakeState = States.START;
 
@@ -147,6 +147,7 @@ master_repl_offset:${this.replicationOffset}
         }
         case States.GETACK: {
           if (!data.toString().toLowerCase().startsWith("*3\r\n$8\r\nreplconf")) {
+            console.error("Unexpected response from master GETACK", data.toString());
             break;
           }
           console.log("GETACK received");
