@@ -142,13 +142,13 @@ master_repl_offset:${this.replicationOffset}
           }
           const rdbSizeString: string = data.toString().split("\\")[0].split("$")[1];
           const rdbSize = parseInt(rdbSizeString);
-          const dbdatasize = rdbSize + 2 + 2 + 1;
+          const dbdatasize = 96;
           const dbdata = data.toString().substring(0, dbdatasize);
           console.log("RDB received");
           HandshakeState = States.GETACK;
-          console.log("testing the data", JSON.stringify(data.toString()), "sub", JSON.stringify(data.toString()).substring(dbdatasize), "sizeall", dbdatasize);
+          console.log("testing the data", JSON.stringify(data.toString()), "sub", JSON.stringify(data.toString().substring(dbdatasize)), "sizeall", dbdatasize);
           data = Buffer.from(data.toString().substring(dbdatasize));
-          console.log("sending data to next stage", data.toString());
+          console.log("sending data to next stage", JSON.stringify(data.toString()));
         }
         case States.GETACK: {
           if (!data.toString().toLowerCase().startsWith("*3\r\n$8\r\nreplconf")) {
