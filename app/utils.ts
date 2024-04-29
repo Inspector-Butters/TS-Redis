@@ -36,7 +36,7 @@ function parseCommand(str: string, instance: Instance): any[] {
             `FULLRESYNC ${instance.replicationId} ${instance.replicationOffset}`
           ),
           RDBString(emptyRDB),
-          parseOutputString("REPLCONF GETACK *"),
+          // parseOutputString("REPLCONF GETACK *"),
         ];
       }
     }
