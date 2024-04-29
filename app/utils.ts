@@ -22,7 +22,11 @@ function parseCommand(str: string, instance: Instance): any[] {
       return [-1, simpleString("PONG")];
     }
     case "REPLCONF": {
-      return [-1, simpleString("OK")];
+      if (args[0].toLowerCase() === "getack" && args[1] === "*") {
+        return [-1, parseOutputString("REPLCONF ACK 0")];
+      } else {
+        return [-1, simpleString("OK")];
+      }
     }
     case "PSYNC": {
       if (args[0] === "?" && args[1] === "-1") {
