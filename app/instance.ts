@@ -1,6 +1,6 @@
 import net from "node:net";
 import { randomUUID } from "node:crypto";
-import { parseOutputString, respArray } from "./resp.ts";
+import { parseMultiRespCommand, parseOutputString, respArray } from "./resp.ts";
 import { CustomCache } from "./cache.ts";
 import { parseCommand } from "./utils.ts";
 import { json } from "stream/consumers";
@@ -168,25 +168,15 @@ master_repl_offset:${this.replicationOffset}
         //   data = Buffer.from(data.toString().substring(cmdLen));
         // }
         case States.COMMAND: {
-          if (data.toString().includes("GETACK")) {
-            console.log("GETACK received");
-            sock.write(parseOutputString(`REPLCONF ACK ${this.offsetCount}`));
-            this.offsetCount += 37;
-            if (data.toString().length <= "*3\r\n$8\r\nreplconf\r\n$6\r\ngetack\r\n$1\r\n*\r\n".length) {
-              break;
-            } else {
-              const cmdLen = "*3\r\n$8\r\nreplconf\r\n$6\r\ngetack\r\n$1\r\n*\r\n".length;
-              data = Buffer.from(data.toString().substring(cmdLen));
+          const commands: string[][] = parseMultiRespCommand(data.toString());
+          for (let i = 0; i < commands.length; i++) {
+            console.log("SLAVE RECIEVED COMMAND FROM MASTER", JSON.stringify(commands[i]));
+            const [type, ...result] = parseCommand(this, undefined, commands[i]);
+            if (type === 2) {
+              for (const res of result) {
+                sock.write(res);
+              }
             }
-          }
-          this.offsetCount += data.toString().length;
-          const commands: string[] = data.toString().split("*");
-          for (let i = 1; i < commands.length; i++) {
-            console.log(
-              "SLAVE RECIEVED COMMAND FROM MASTER",
-              JSON.stringify("*".concat(commands[i]))
-            );
-            parseCommand("*".concat(commands[i]), this);
           }
           break;
         }

@@ -49,7 +49,7 @@ async function main() {
         if (instance.isMaster) {
           addReplicaConnection("*".concat(commands[i]), connection);
         }
-        const [type, ...result] = parseCommand("*".concat(commands[i]), instance);
+        const [type, ...result] = parseCommand(instance, "*".concat(commands[i]));
         if (type === 1 && instance.isMaster) {
           for (const replica of instance.replicaConnections) {
             console.log("Writing to replica", JSON.stringify("*".concat(commands[i])));

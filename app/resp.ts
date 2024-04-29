@@ -9,23 +9,25 @@ export function parseRespCommand(cmd: string): string[] {
   return parts;
 }
 
-// export function parseMultiRespCommand(cmd: string): string[][] {
-//   const lines = cmd.split("\r\n");
-//   const parts: string[][] = [];
-//   const len = parseInt(lines[0].split("*")[1]);
-//   let index = 1;
-//   let cmdTemp: string[] = [];
-//   for (let i = 0; i < len; i++) {
-//     const argLen = parseInt(lines[index].split("$")[1]);
-//     index++;
-//     for (let j = 0; j < argLen; j++) {
-//       cmdTemp.push(lines[index]);
-//       index++;
-//     }
-//     parts.push(cmdTemp);
-//   }
-//   return parts;
-// }
+export function parseMultiRespCommand(cmd: string): string[][] {
+  const lines = cmd.split("\r\n");
+  const parts: string[][] = [];
+  let tmp: string[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    if (lines[i] === "" || lines[i].startsWith("$")) {
+      continue;
+    }
+    if (lines[i].startsWith("*") && lines[i].length > 1) {
+      parts.push(tmp);
+      tmp = []
+    } else {
+      tmp.push(lines[i]);
+    }
+  }
+  parts.push(tmp);
+
+  return parts;
+}
 
 export function simpleString(str: string) {
   return `+${str}\r\n`;

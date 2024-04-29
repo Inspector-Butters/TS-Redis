@@ -12,21 +12,30 @@ import {
 const emptyRDB: string =
   "524544495330303131fa0972656469732d76657205372e322e30fa0a72656469732d62697473c040fa056374696d65c26d08bc65fa08757365642d6d656dc2b0c41000fa08616f662d62617365c000fff06e3bfec0ff5aa2";
 
-function parseCommand(str: string, instance: Instance): any[] {
-  const [cmd, ...args] = parseRespCommand(str);
-  // console.log("HERE HERE", parseRespCommand(str));
-  // console.log(instance.role, "parsed command", cmd, args);
+function parseCommand(instance: Instance, str?: string, commandsList?: string[]): any[] {
+  if (commandsList && !str) {
+    const [cmd, ...args] = commandsList;
+    return handleCommand(cmd, args, instance);
+  } else if (str && !commandsList) {
+    const [cmd, ...args] = parseRespCommand(str);
+    return handleCommand(cmd, args, instance);
+  } else {
+    throw new Error("No command provided");
+  }
+}
+
+function handleCommand(cmd: string, args: string[], instance: Instance): any[] {
 
   switch (cmd.toUpperCase()) {
     case "PING": {
       return [-1, simpleString("PONG")];
     }
     case "REPLCONF": {
-      // if (args[0].toLowerCase() === "getack" && args[1] === "*") {
-      //   return [-1, parseOutputString("REPLCONF ACK 0")];
-      // } else {
-      return [-1, simpleString("OK")];
-      // }
+      if (args[0].toLowerCase() === "getack" && args[1] === "*") {
+        return [2, parseOutputString("REPLCONF ACK 0")];
+      } else {
+        return [-1, simpleString("OK")];
+      }
     }
     case "PSYNC": {
       if (args[0] === "?" && args[1] === "-1") {
