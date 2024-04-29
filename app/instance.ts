@@ -14,6 +14,7 @@ export class Instance {
   config: Record<string, any> = {};
   replicaConnections: net.Socket[] = [];
   cache: CustomCache = new CustomCache();
+  offsetCount: number = 0;
 
   constructor(
     readonly role: instanceRole,
@@ -169,7 +170,8 @@ master_repl_offset:${this.replicationOffset}
         case States.COMMAND: {
           if (data.toString().includes("GETACK")) {
             console.log("GETACK received");
-            sock.write(parseOutputString("REPLCONF ACK 0"));
+            sock.write(parseOutputString(`REPLCONF ACK ${this.offsetCount}`));
+            this.offsetCount += 37;
             if (data.toString().length <= "*3\r\n$8\r\nreplconf\r\n$6\r\ngetack\r\n$1\r\n*\r\n".length) {
               break;
             } else {
@@ -183,6 +185,7 @@ master_repl_offset:${this.replicationOffset}
               "SLAVE RECIEVED COMMAND FROM MASTER",
               JSON.stringify("*".concat(commands[i]))
             );
+            this.offsetCount += ("*".concat(commands[i])).length;
             parseCommand("*".concat(commands[i]), this);
           }
           break;
