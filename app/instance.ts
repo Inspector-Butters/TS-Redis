@@ -145,10 +145,14 @@ master_repl_offset:${this.replicationOffset}
           const dbdatasize = 92;
           const dbdata = data.toString().substring(0, dbdatasize);
           console.log("RDB received");
+          HandshakeState = States.COMMAND;
           // console.log("testing the data", JSON.stringify(data.toString()), "sub", JSON.stringify(data.toString().substring(dbdatasize)), "sizeall", dbdatasize);
           data = Buffer.from(data.toString().substring(dbdatasize));
-          console.log("sending data to next stage", JSON.stringify(data.toString()));
-          HandshakeState = States.COMMAND;
+          if (data.toString().length > 0) {
+            console.log("sending data to next stage", JSON.stringify(data.toString()));
+          } else {
+            break;
+          }
         }
         // case States.GETACK: {
         //   if (!data.toString().toLowerCase().startsWith("*3\r\n$8\r\nreplconf")) {
