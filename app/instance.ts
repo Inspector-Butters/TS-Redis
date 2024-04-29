@@ -144,6 +144,7 @@ master_repl_offset:${this.replicationOffset}
           console.log("RDB received");
           HandshakeState = States.GETACK;
           data = Buffer.from(data.toString().substring(dbdatasize));
+          console.log("sending data to next stage", data.toString());
         }
         case States.GETACK: {
           if (!data.toString().toLowerCase().startsWith("*3\r\n$8\r\nreplconf")) {
