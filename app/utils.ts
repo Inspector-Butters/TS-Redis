@@ -12,7 +12,11 @@ import {
 const emptyRDB: string =
   "524544495330303131fa0972656469732d76657205372e322e30fa0a72656469732d62697473c040fa056374696d65c26d08bc65fa08757365642d6d656dc2b0c41000fa08616f662d62617365c000fff06e3bfec0ff5aa2";
 
-function parseCommand(instance: Instance, str?: string, commandsList?: string[]): any[] {
+function parseCommand(
+  instance: Instance,
+  str?: string,
+  commandsList?: string[]
+): any[] {
   if (commandsList && !str) {
     const [cmd, ...args] = commandsList;
     return handleCommand(cmd, args, instance);
@@ -25,7 +29,6 @@ function parseCommand(instance: Instance, str?: string, commandsList?: string[])
 }
 
 function handleCommand(cmd: string, args: string[], instance: Instance): any[] {
-
   switch (cmd.toUpperCase()) {
     case "PING": {
       return [-1, simpleString("PONG")];

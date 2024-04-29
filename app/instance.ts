@@ -74,7 +74,7 @@ master_repl_offset:${this.replicationOffset}
       RDB: "rdb",
       GETACK: "getack",
       COMMAND: "command",
-    }
+    };
     let HandshakeState = States.START;
 
     const sock = net.createConnection(
@@ -96,7 +96,10 @@ master_repl_offset:${this.replicationOffset}
       switch (HandshakeState) {
         case States.PING: {
           if (data.toString() !== "+PONG\r\n") {
-            console.error("Unexpected response from master PING", JSON.stringify(data));
+            console.error(
+              "Unexpected response from master PING",
+              JSON.stringify(data)
+            );
             process.exit(1);
           }
           console.log("PONG received");
@@ -108,7 +111,10 @@ master_repl_offset:${this.replicationOffset}
         }
         case States.REPLCONF_PORT: {
           if (data.toString() !== "+OK\r\n") {
-            console.error("Unexpected response from master REPLCONF", data.toString());
+            console.error(
+              "Unexpected response from master REPLCONF",
+              data.toString()
+            );
             process.exit(1);
           }
           console.log("REPLCONF received");
@@ -118,7 +124,10 @@ master_repl_offset:${this.replicationOffset}
         }
         case States.REPLCONF_CAPA: {
           if (data.toString() !== "+OK\r\n") {
-            console.error("Unexpected response from master REPLCONF CAPA", data.toString());
+            console.error(
+              "Unexpected response from master REPLCONF CAPA",
+              data.toString()
+            );
             process.exit(1);
           }
           console.log("REPLCONF received");
@@ -128,7 +137,10 @@ master_repl_offset:${this.replicationOffset}
         }
         case States.PSYNC: {
           if (!data.toString().startsWith("+FULLRESYNC")) {
-            console.error("Unexpected response from master PSYNC", data.toString());
+            console.error(
+              "Unexpected response from master PSYNC",
+              data.toString()
+            );
             process.exit(1);
           }
           console.log("FULLRESYNC received");
@@ -138,10 +150,16 @@ master_repl_offset:${this.replicationOffset}
         }
         case States.RDB: {
           if (!data.toString().startsWith("$")) {
-            console.error("Unexpected response from master RDB", data.toString());
+            console.error(
+              "Unexpected response from master RDB",
+              data.toString()
+            );
             break;
           }
-          const rdbSizeString: string = data.toString().split("\\")[0].split("$")[1];
+          const rdbSizeString: string = data
+            .toString()
+            .split("\\")[0]
+            .split("$")[1];
           const rdbSize = parseInt(rdbSizeString);
           const dbdatasize = 92;
           const dbdata = data.toString().substring(0, dbdatasize);
@@ -150,28 +168,28 @@ master_repl_offset:${this.replicationOffset}
           // console.log("testing the data", JSON.stringify(data.toString()), "sub", JSON.stringify(data.toString().substring(dbdatasize)), "sizeall", dbdatasize);
           data = Buffer.from(data.toString().substring(dbdatasize));
           if (data.toString().length > 0) {
-            console.log("sending data to next stage", JSON.stringify(data.toString()));
+            console.log(
+              "sending data to next stage",
+              JSON.stringify(data.toString())
+            );
           } else {
             break;
           }
         }
-        // case States.GETACK: {
-        //   if (!data.toString().toLowerCase().startsWith("*3\r\n$8\r\nreplconf")) {
-        //     console.error("Unexpected response from master GETACK", JSON.stringify(data.toString()));
-        //     break;
-        //   }
-        //   console.log("GETACK received");
-        //   sock.write(parseOutputString("REPLCONF ACK 0"));
-        //   HandshakeState = States.COMMAND;
 
-        //   const cmdLen = "*3\r\n$8\r\nreplconf\r\n$6\r\ngetack\r\n$1\r\n*\r\n".length;
-        //   data = Buffer.from(data.toString().substring(cmdLen));
-        // }
         case States.COMMAND: {
+          this.offsetCount += data.toString().length;
           const commands: string[][] = parseMultiRespCommand(data.toString());
           for (let i = 0; i < commands.length; i++) {
-            console.log("SLAVE RECIEVED COMMAND FROM MASTER", JSON.stringify(commands[i]));
-            const [type, ...result] = parseCommand(this, undefined, commands[i]);
+            console.log(
+              "SLAVE RECIEVED COMMAND FROM MASTER",
+              JSON.stringify(commands[i])
+            );
+            const [type, ...result] = parseCommand(
+              this,
+              undefined,
+              commands[i]
+            );
             if (type === 2) {
               for (const res of result) {
                 sock.write(res);
