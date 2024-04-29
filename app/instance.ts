@@ -163,6 +163,16 @@ master_repl_offset:${this.replicationOffset}
         //   data = Buffer.from(data.toString().substring(cmdLen));
         // }
         case States.COMMAND: {
+          if (data.toString().includes("GETACK")) {
+            console.log("GETACK received");
+            sock.write(parseOutputString("REPLCONF ACK 0"));
+            if (data.toString().length <= "*3\r\n$8\r\nreplconf\r\n$6\r\ngetack\r\n$1\r\n*\r\n".length) {
+              break;
+            } else {
+              const cmdLen = "*3\r\n$8\r\nreplconf\r\n$6\r\ngetack\r\n$1\r\n*\r\n".length;
+              data = Buffer.from(data.toString().substring(cmdLen));
+            }
+          }
           const commands: string[] = data.toString().split("*");
           for (let i = 1; i < commands.length; i++) {
             console.log(
