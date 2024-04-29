@@ -179,13 +179,13 @@ master_repl_offset:${this.replicationOffset}
               data = Buffer.from(data.toString().substring(cmdLen));
             }
           }
+          this.offsetCount += data.toString().length;
           const commands: string[] = data.toString().split("*");
           for (let i = 1; i < commands.length; i++) {
             console.log(
               "SLAVE RECIEVED COMMAND FROM MASTER",
               JSON.stringify("*".concat(commands[i]))
             );
-            this.offsetCount += ("*".concat(commands[i])).length;
             parseCommand("*".concat(commands[i]), this);
           }
           break;
