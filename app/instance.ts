@@ -75,7 +75,7 @@ master_repl_offset:${this.replicationOffset}
     );
 
     sock.on("data", (data: Buffer) => {
-      // console.log("Received data from master", data.toString());
+      console.log("Received data from master", JSON.stringify(data.toString()));
 
       if (step > 6) {
         // const command: string = data.toString().trim();
