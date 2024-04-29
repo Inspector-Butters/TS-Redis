@@ -94,7 +94,7 @@ master_repl_offset:${this.replicationOffset}
       switch (HandshakeState) {
         case States.PING: {
           if (stringData !== "+PONG\r\n") {
-            console.error("Unexpected response from master");
+            console.error("Unexpected response from master PING", stringData);
             process.exit(1);
           }
           console.log("PONG received");
@@ -106,7 +106,7 @@ master_repl_offset:${this.replicationOffset}
         }
         case States.REPLCONF_PORT: {
           if (stringData !== "+OK\r\n") {
-            console.error("Unexpected response from master");
+            console.error("Unexpected response from master REPLCONF", stringData);
             process.exit(1);
           }
           console.log("REPLCONF received");
@@ -116,7 +116,7 @@ master_repl_offset:${this.replicationOffset}
         }
         case States.REPLCONF_CAPA: {
           if (stringData !== "+OK\r\n") {
-            console.error("Unexpected response from master");
+            console.error("Unexpected response from master REPLCONF CAPA", stringData);
             process.exit(1);
           }
           console.log("REPLCONF received");
@@ -126,7 +126,7 @@ master_repl_offset:${this.replicationOffset}
         }
         case States.PSYNC: {
           if (!stringData.startsWith("+FULLRESYNC")) {
-            console.error("Unexpected response from master");
+            console.error("Unexpected response from master PSYNC", stringData);
             process.exit(1);
           }
           console.log("FULLRESYNC received");
@@ -136,6 +136,7 @@ master_repl_offset:${this.replicationOffset}
         }
         case States.RDB: {
           if (!stringData.startsWith("$")) {
+            console.error("Unexpected response from master RDB", stringData);
             break;
           }
           const rdbSizeString: string = stringData.split("\\")[0].split("$")[1];
@@ -168,6 +169,7 @@ master_repl_offset:${this.replicationOffset}
             );
             parseCommand("*".concat(commands[i]), this);
           }
+          break;
         }
         default: {
           console.error("Unexpected state");
