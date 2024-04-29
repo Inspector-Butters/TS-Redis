@@ -88,11 +88,12 @@ master_repl_offset:${this.replicationOffset}
     );
 
     sock.on("data", (data: Buffer) => {
-      console.log("Received data from master", JSON.stringify(data.toString()));
+      let stringData: string = data.toString().trim();
+      console.log("Received data from master", JSON.stringify(stringData));
 
       switch (HandshakeState) {
         case States.PING: {
-          if (data.toString() !== "+PONG\r\n") {
+          if (stringData !== "+PONG\r\n") {
             console.error("Unexpected response from master");
             process.exit(1);
           }
@@ -104,7 +105,7 @@ master_repl_offset:${this.replicationOffset}
           return;
         }
         case States.REPLCONF_PORT: {
-          if (data.toString() !== "+OK\r\n") {
+          if (stringData !== "+OK\r\n") {
             console.error("Unexpected response from master");
             process.exit(1);
           }
@@ -114,7 +115,7 @@ master_repl_offset:${this.replicationOffset}
           return;
         }
         case States.REPLCONF_CAPA: {
-          if (data.toString() !== "+OK\r\n") {
+          if (stringData !== "+OK\r\n") {
             console.error("Unexpected response from master");
             process.exit(1);
           }
@@ -124,31 +125,31 @@ master_repl_offset:${this.replicationOffset}
           return;
         }
         case States.PSYNC: {
-          if (!data.toString().startsWith("+FULLRESYNC")) {
+          if (!stringData.startsWith("+FULLRESYNC")) {
             console.error("Unexpected response from master");
             process.exit(1);
           }
           console.log("FULLRESYNC received");
           HandshakeState = States.RDB;
           const tmpdata: string[] = data.toString().split("\r\n");
-          data = Buffer.from(tmpdata.slice(1).join("\r\n"));
+          stringData = tmpdata.slice(1).join("\r\n");
         }
         case States.RDB: {
-          if (!data.toString().startsWith("$")) {
+          if (!stringData.startsWith("$")) {
             break;
           }
-          const rdbSizeString: string = data.toString().trim().split("\\")[0].split("$")[1];
+          const rdbSizeString: string = stringData.split("\\")[0].split("$")[1];
           const rdbSize = parseInt(rdbSizeString);
           const dbdatasize = rdbSize + rdbSizeString.length + 2 + 1;
-          const dbdata = data.toString().substring(0, dbdatasize);
+          const dbdata = stringData.substring(0, dbdatasize);
           console.log("RDB received");
           HandshakeState = States.GETACK;
-          data = Buffer.from(data.toString().substring(dbdatasize));
-          console.log("sending data to next stage", data.toString());
+          stringData = stringData.substring(dbdatasize);
+          console.log("sending data to next stage", stringData);
         }
         case States.GETACK: {
-          if (!data.toString().toLowerCase().startsWith("*3\r\n$8\r\nreplconf")) {
-            console.error("Unexpected response from master GETACK", data.toString());
+          if (!stringData.toLowerCase().startsWith("*3\r\n$8\r\nreplconf")) {
+            console.error("Unexpected response from master GETACK", stringData);
             break;
           }
           console.log("GETACK received");
@@ -156,10 +157,10 @@ master_repl_offset:${this.replicationOffset}
           HandshakeState = States.COMMAND;
 
           const cmdLen = "*3\r\n$8\r\nreplconf\r\n$6\r\ngetack\r\n$1\r\n*\r\n".length;
-          data = Buffer.from(data.toString().substring(cmdLen));
+          stringData = stringData.substring(cmdLen);
         }
         case States.COMMAND: {
-          const commands: string[] = data.toString().trim().split("*");
+          const commands: string[] = stringData.split("*");
           for (let i = 1; i < commands.length; i++) {
             console.log(
               "SLAVE RECIEVED COMMAND FROM MASTER",
