@@ -146,7 +146,7 @@ master_repl_offset:${this.replicationOffset}
           data = Buffer.from(data.toString().substring(dbdatasize));
         }
         case States.GETACK: {
-          if (!data.toString().startsWith("*3\r\n$8\r\nreplconf")) {
+          if (!data.toString().toLowerCase().startsWith("*3\r\n$8\r\nreplconf")) {
             break;
           }
           console.log("GETACK received");
