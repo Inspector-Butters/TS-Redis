@@ -152,7 +152,7 @@ master_repl_offset:${this.replicationOffset}
         }
         case States.GETACK: {
           if (!data.toString().toLowerCase().startsWith("*3\r\n$8\r\nreplconf")) {
-            console.error("Unexpected response from master GETACK", data.toString());
+            console.error("Unexpected response from master GETACK", JSON.stringify(data.toString()));
             break;
           }
           console.log("GETACK received");
