@@ -89,8 +89,8 @@ master_repl_offset:${this.replicationOffset}
     );
 
     sock.on("data", (data: Buffer) => {
-      let stringData: string = data.toString().trim();
-      console.log("Received data from master", JSON.stringify(stringData));
+      // let stringData: string = data.toString().trim();
+      console.log("Received data from master", JSON.stringify(data.toString()));
 
       switch (HandshakeState) {
         case States.PING: {
@@ -106,8 +106,8 @@ master_repl_offset:${this.replicationOffset}
           return;
         }
         case States.REPLCONF_PORT: {
-          if (stringData !== "+OK\r\n") {
-            console.error("Unexpected response from master REPLCONF", stringData);
+          if (data.toString() !== "+OK\r\n") {
+            console.error("Unexpected response from master REPLCONF", data.toString());
             process.exit(1);
           }
           console.log("REPLCONF received");
@@ -116,8 +116,8 @@ master_repl_offset:${this.replicationOffset}
           return;
         }
         case States.REPLCONF_CAPA: {
-          if (stringData !== "+OK\r\n") {
-            console.error("Unexpected response from master REPLCONF CAPA", stringData);
+          if (data.toString() !== "+OK\r\n") {
+            console.error("Unexpected response from master REPLCONF CAPA", data.toString());
             process.exit(1);
           }
           console.log("REPLCONF received");
@@ -126,32 +126,32 @@ master_repl_offset:${this.replicationOffset}
           return;
         }
         case States.PSYNC: {
-          if (!stringData.startsWith("+FULLRESYNC")) {
-            console.error("Unexpected response from master PSYNC", stringData);
+          if (!data.toString().startsWith("+FULLRESYNC")) {
+            console.error("Unexpected response from master PSYNC", data.toString());
             process.exit(1);
           }
           console.log("FULLRESYNC received");
           HandshakeState = States.RDB;
           const tmpdata: string[] = data.toString().split("\r\n");
-          stringData = tmpdata.slice(1).join("\r\n");
+          data = Buffer.from(tmpdata.slice(1).join("\r\n"));
         }
         case States.RDB: {
-          if (!stringData.startsWith("$")) {
-            console.error("Unexpected response from master RDB", stringData);
+          if (!data.toString().startsWith("$")) {
+            console.error("Unexpected response from master RDB", data.toString());
             break;
           }
-          const rdbSizeString: string = stringData.split("\\")[0].split("$")[1];
+          const rdbSizeString: string = data.toString().split("\\")[0].split("$")[1];
           const rdbSize = parseInt(rdbSizeString);
           const dbdatasize = rdbSize + rdbSizeString.length + 2 + 1;
-          const dbdata = stringData.substring(0, dbdatasize);
+          const dbdata = data.toString().substring(0, dbdatasize);
           console.log("RDB received");
           HandshakeState = States.GETACK;
-          stringData = stringData.substring(dbdatasize);
-          console.log("sending data to next stage", stringData);
+          data = Buffer.from(data.toString().substring(dbdatasize));
+          console.log("sending data to next stage", data.toString());
         }
         case States.GETACK: {
-          if (!stringData.toLowerCase().startsWith("*3\r\n$8\r\nreplconf")) {
-            console.error("Unexpected response from master GETACK", stringData);
+          if (!data.toString().toLowerCase().startsWith("*3\r\n$8\r\nreplconf")) {
+            console.error("Unexpected response from master GETACK", data.toString());
             break;
           }
           console.log("GETACK received");
@@ -159,10 +159,10 @@ master_repl_offset:${this.replicationOffset}
           HandshakeState = States.COMMAND;
 
           const cmdLen = "*3\r\n$8\r\nreplconf\r\n$6\r\ngetack\r\n$1\r\n*\r\n".length;
-          stringData = stringData.substring(cmdLen);
+          data = Buffer.from(data.toString().substring(cmdLen));
         }
         case States.COMMAND: {
-          const commands: string[] = stringData.split("*");
+          const commands: string[] = data.toString().split("*");
           for (let i = 1; i < commands.length; i++) {
             console.log(
               "SLAVE RECIEVED COMMAND FROM MASTER",
