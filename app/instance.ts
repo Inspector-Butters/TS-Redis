@@ -93,7 +93,7 @@ master_repl_offset:${this.replicationOffset}
 
       switch (HandshakeState) {
         case States.PING: {
-          if (JSON.stringify(stringData) !== "+PONG\r\n") {
+          if (JSON.stringify(data) !== "+PONG\r\n") {
             console.error("Unexpected response from master PING", stringData);
             process.exit(1);
           }
