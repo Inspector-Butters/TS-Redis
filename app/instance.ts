@@ -118,15 +118,24 @@ master_repl_offset:${this.replicationOffset}
       }
       if (step === 5) {
         step++;
+        const commands: string[] = data.toString().trim().split("*");
+        for (let i = 1; i < commands.length; i++) {
+          console.log(
+            "SLAVE RECIEVED COMMAND FROM MASTER",
+            JSON.stringify("*".concat(commands[i]))
+          );
+          // parseCommand("*".concat(commands[i]), this);
+        }
         console.log("RDB received");
+
         return;
       }
-      if (step === 6) {
-        console.log("GETACK received");
-        step++;
-        sock.write(parseOutputString("REPLCONF ACK 0"));
-        return;
-      }
+      // if (step === 6) {
+      //   console.log("GETACK received");
+      //   step++;
+      //   sock.write(parseOutputString("REPLCONF ACK 0"));
+      //   return;
+      // }
     });
   }
 }
