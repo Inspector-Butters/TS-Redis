@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { parseOutputString, respArray } from "./resp.ts";
 import { CustomCache } from "./cache.ts";
 import { parseCommand } from "./utils.ts";
+import { json } from "stream/consumers";
 
 enum instanceRole {
   MASTER = "master",
@@ -93,8 +94,8 @@ master_repl_offset:${this.replicationOffset}
 
       switch (HandshakeState) {
         case States.PING: {
-          if (JSON.stringify(data) !== "+PONG\r\n") {
-            console.error("Unexpected response from master PING", stringData);
+          if (data.toString() !== "+PONG\r\n") {
+            console.error("Unexpected response from master PING", JSON.stringify(data));
             process.exit(1);
           }
           console.log("PONG received");
