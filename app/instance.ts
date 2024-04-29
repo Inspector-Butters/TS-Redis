@@ -62,6 +62,18 @@ master_repl_offset:${this.replicationOffset}
   initiateHandshake(port: number) {
     console.log("Initiating handshake");
     let step = 1;
+    const States = {
+      START: 0,
+      PING: 1,
+      REPLCONF_PORT: 2,
+      REPLCONF_CAPA: 3,
+      PSYNC: 4,
+      FULLRESYNC: 5,
+      RDB: 6,
+      GETACK: 7,
+      COMMAND: 8
+    }
+    let HandshakeState = States.START;
 
     const sock = net.createConnection(
       {
@@ -71,74 +83,93 @@ master_repl_offset:${this.replicationOffset}
       () => {
         console.log("Connected to master");
         sock.write(respArray("PING"));
+        HandshakeState = States.PING;
       }
     );
 
     sock.on("data", (data: Buffer) => {
       console.log("Received data from master", JSON.stringify(data.toString()));
 
-      if (step > 6) {
-        // const command: string = data.toString().trim();
-        // console.log("SLAVE KIRI RECIEVED COMMAND FROM MASTER", JSON.stringify(data.toString()));
-        const commands: string[] = data.toString().trim().split("*");
-        for (let i = 1; i < commands.length; i++) {
-          console.log(
-            "SLAVE RECIEVED COMMAND FROM MASTER",
-            JSON.stringify("*".concat(commands[i]))
+      switch (HandshakeState) {
+        case States.PING: {
+          if (data.toString() !== "+PONG\r\n") {
+            console.error("Unexpected response from master");
+            process.exit(1);
+          }
+          console.log("PONG received");
+          sock.write(
+            parseOutputString(`REPLCONF listening-port ${port.toString()}`)
           );
-          parseCommand("*".concat(commands[i]), this);
+          HandshakeState = States.REPLCONF_PORT;
+          return;
         }
-        return;
-      }
+        case States.REPLCONF_PORT: {
+          if (data.toString() !== "+OK\r\n") {
+            console.error("Unexpected response from master");
+            process.exit(1);
+          }
+          console.log("REPLCONF received");
+          sock.write(parseOutputString("REPLCONF capa psync2"));
+          HandshakeState = States.REPLCONF_CAPA;
+          return;
+        }
+        case States.REPLCONF_CAPA: {
+          if (data.toString() !== "+OK\r\n") {
+            console.error("Unexpected response from master");
+            process.exit(1);
+          }
+          console.log("REPLCONF received");
+          sock.write(parseOutputString("PSYNC ? -1"));
+          HandshakeState = States.PSYNC;
+          return;
+        }
+        case States.PSYNC: {
+          if (!data.toString().startsWith("+FULLRESYNC")) {
+            console.error("Unexpected response from master");
+            process.exit(1);
+          }
+          console.log("FULLRESYNC received");
+          HandshakeState = States.RDB;
+          const tmpdata: string[] = data.toString().split("\r\n");
+          data = Buffer.from(tmpdata.slice(1).join("\r\n"));
+        }
+        case States.RDB: {
+          if (!data.toString().startsWith("$")) {
+            break;
+          }
+          const rdbSizeString: string = data.toString().trim().split("\\")[0].split("$")[1];
+          const rdbSize = parseInt(rdbSizeString);
+          const dbdatasize = rdbSize + rdbSizeString.length + 2 + 1;
+          const dbdata = data.toString().substring(0, dbdatasize);
+          console.log("RDB received");
+          HandshakeState = States.GETACK;
+          data = Buffer.from(data.toString().substring(dbdatasize));
+        }
+        case States.GETACK: {
+          if (!data.toString().startsWith("*3\r\n$8\r\nreplconf")) {
+            break;
+          }
+          console.log("GETACK received");
+          sock.write(parseOutputString("REPLCONF ACK 0"));
+          HandshakeState = States.COMMAND;
 
-      if (step === 1 && data.toString() == "+PONG\r\n") {
-        console.log("PONG received");
-        step++;
-        sock.write(
-          parseOutputString(`REPLCONF listening-port ${port.toString()}`)
-        );
-        return;
-      }
-      if (step === 2 && data.toString() == "+OK\r\n") {
-        console.log("REPLCONF received");
-        step++;
-        sock.write(parseOutputString("REPLCONF capa psync2"));
-        return;
-      }
-      if (step === 3 && data.toString() == "+OK\r\n") {
-        console.log("REPLCONF received");
-        step++;
-        sock.write(parseOutputString("PSYNC ? -1"));
-        return;
-      }
-      if (step === 4 && data.toString().startsWith("+FULLRESYNC")) {
-        console.log("FULLRESYNC received");
-        step++;
-        return;
-      }
-      if (step === 5) {
-        step++;
-        const rdbSizeString: string = data.toString().trim().split("\\")[0].split("$")[1];
-        const rdbSize = parseInt(rdbSizeString);
-        const dataList = data.toString().trim().split("\r\n");
-        const rdbContent = dataList[1].substring(0, rdbSize);
-        console.log("RDB received");
-        if (dataList[1].length > rdbSize || dataList.length > 2) {
-          if (dataList.includes("REPLCONF") && dataList.includes("GETACK")) {
-            console.log("GETACK received");
-            step++;
-            sock.write(parseOutputString("REPLCONF ACK 0"));
+          const cmdLen = "*3\r\n$8\r\nreplconf\r\n$6\r\ngetack\r\n$1\r\n*\r\n".length;
+          data = Buffer.from(data.toString().substring(cmdLen));
+        }
+        case States.COMMAND: {
+          const commands: string[] = data.toString().trim().split("*");
+          for (let i = 1; i < commands.length; i++) {
+            console.log(
+              "SLAVE RECIEVED COMMAND FROM MASTER",
+              JSON.stringify("*".concat(commands[i]))
+            );
+            parseCommand("*".concat(commands[i]), this);
           }
         }
-
-        return;
+        default: {
+          console.error("Unexpected state");
+        }
       }
-      // if (step === 6) {
-      //   console.log("GETACK received");
-      //   step++;
-      //   sock.write(parseOutputString("REPLCONF ACK 0"));
-      //   return;
-      // }
     });
   }
 }
