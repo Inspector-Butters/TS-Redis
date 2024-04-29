@@ -142,7 +142,7 @@ master_repl_offset:${this.replicationOffset}
           }
           const rdbSizeString: string = data.toString().split("\\")[0].split("$")[1];
           const rdbSize = parseInt(rdbSizeString);
-          const dbdatasize = 96;
+          const dbdatasize = 92;
           const dbdata = data.toString().substring(0, dbdatasize);
           console.log("RDB received");
           HandshakeState = States.GETACK;
