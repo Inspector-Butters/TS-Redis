@@ -118,15 +118,18 @@ master_repl_offset:${this.replicationOffset}
       }
       if (step === 5) {
         step++;
-        const commands: string[] = data.toString().trim().split("*");
-        for (let i = 1; i < commands.length; i++) {
-          console.log(
-            "SLAVE RECIEVED COMMAND FROM MASTER",
-            JSON.stringify("*".concat(commands[i]))
-          );
-          // parseCommand("*".concat(commands[i]), this);
-        }
+        const rdbSizeString: string = data.toString().trim().split("\\")[0].split("$")[1];
+        const rdbSize = parseInt(rdbSizeString);
+        const dataList = data.toString().trim().split("\r\n");
+        const rdbContent = dataList[1].substring(0, rdbSize);
         console.log("RDB received");
+        if (dataList[1].length > rdbSize || dataList.length > 2) {
+          if (dataList.includes("REPLCONF") && dataList.includes("GETACK")) {
+            console.log("GETACK received");
+            step++;
+            sock.write(parseOutputString("REPLCONF ACK 0"));
+          }
+        }
 
         return;
       }
