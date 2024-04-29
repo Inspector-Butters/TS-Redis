@@ -146,6 +146,7 @@ master_repl_offset:${this.replicationOffset}
           const dbdata = data.toString().substring(0, dbdatasize);
           console.log("RDB received");
           HandshakeState = States.GETACK;
+          console.log("testing the data", data.toString())
           data = Buffer.from(data.toString().substring(dbdatasize));
           console.log("sending data to next stage", data.toString());
         }
