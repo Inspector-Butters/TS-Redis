@@ -35,7 +35,7 @@ function handleCommand(cmd: string, args: string[], instance: Instance): any[] {
     }
     case "REPLCONF": {
       if (args[0].toLowerCase() === "getack" && args[1] === "*") {
-        return [2, parseOutputString("REPLCONF ACK 0")];
+        return [2, parseOutputString(`REPLCONF ACK ${instance.offsetCount}`)];
       } else {
         return [-1, simpleString("OK")];
       }
