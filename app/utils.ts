@@ -60,7 +60,7 @@ function handleCommand(cmd: string, args: string[], instance: Instance): any[] {
       return [-1, parseOutputList(args)];
     }
     case "WAIT": {
-      return [-1, encodeInt(0)];
+      return [-1, encodeInt(this.replicaConnections.length)];
     }
     case "SET": {
       const [key, val, px, exp] = args;
