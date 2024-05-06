@@ -19,7 +19,7 @@ export function parseMultiRespCommand(cmd: string): string[][] {
     }
     if (lines[i].startsWith("*") && lines[i].length > 1) {
       parts.push(tmp);
-      tmp = []
+      tmp = [];
     } else {
       tmp.push(lines[i]);
     }
@@ -52,7 +52,9 @@ export function parseOutputList(parts: string[]) {
     return respArray(...parts);
   }
 }
-
+export function encodeInt(x: number): string {
+  return `:${x}\r\n`;
+}
 export function parseOutputString(str: string) {
   const parts = str.split(" ");
   return parseOutputList(parts);

@@ -2,6 +2,7 @@ import { Instance } from "./instance.ts";
 import {
   RDBString,
   bulkString,
+  encodeInt,
   parseOutputList,
   parseOutputString,
   parseRespCommand,
@@ -57,6 +58,9 @@ function handleCommand(cmd: string, args: string[], instance: Instance): any[] {
     }
     case "ECHO": {
       return [-1, parseOutputList(args)];
+    }
+    case "WAIT": {
+      return [-1, encodeInt(0)];
     }
     case "SET": {
       const [key, val, px, exp] = args;
